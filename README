@@ -67,7 +67,7 @@ sudo modprobe snd-bcm2835
 sudo amixer cset numid=3 1
 
 #run pure data with the patch, no gui
-pd -r 22050 -audiobuf 75 -noadc -alsa -nomidi -nogui send 'pd dsp 1' -rt pd_patches/poly_simp.pd
+pd -r 22050 -audiobuf 75 -noadc -alsa -nomidi -nogui -send 'pd dsp 1' -rt pd_patches/poly_simp.pd
 #check pd -help for possible other helpful options 
 
 #run the python application
