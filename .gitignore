@@ -1,6 +1,6 @@
 *.pyc
 *.plist
-
+*~
 *.xcbkptlist
 
 *.xcuserstate
