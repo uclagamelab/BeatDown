@@ -1,0 +1,54 @@
+BREAK BEAT (working title)
+UCLA Gamelab
+
+A slapstick-violence procedural music game for 2 players
+
+=====================================
+	USAGE
+=====================================
+
+There are 2 components:
+A python program
+A pure data patch
+
+
+You need to run the patch 'pd_patches/poly_simp.pd' in pure data.
+You then need to run SynthController.py with python
+
+The python module handles game logic, and sends message over the local network (using pdsend, see SETUP) to control the puredata synthesizer patch.
+
+Eventually there will a script that runs everything for you
+
+=====================================
+	SETUP
+=====================================
+
+* <Install RPi.GPIO, other stuff?>:
+
+* Install Pure Data:
+	
+	add following line to /etc/apt/sources.list
+		deb-src http://archive.raspbian.org/raspbian wheezy main contrib non-free rpi
+
+	$ sudo apt-get update
+
+	$ wget https://puredata.info/downloads/pd-extended-0-43-3-on-raspberry-pi-raspbian-wheezy-armhf/releases/1.0/Pd-0.43.3-extended-20121004.deb
+
+	$ sudo dpkg -i Pd-0.43.3-extended-20121004.deb
+
+	$ sudo apt-get -f install
+	
+	$ sudo chmod 4755 /usr/bin/pd-extended 
+
+	NOTES: 
+	above instructions taken from http://puredata.info/downloads/pd-extended-0-43-3-on-raspberry-pi-raspbian-wheezy-armhf
+
+* Add 'pdsend' and 'pdreceive' to command line path
+	
+	$ sudo cp rpi_setup/pdsend /usr/local/bin
+	
+	$ sudo cp rpi_setup/pdreceive /usr/local/bin
+
+	NOTES:
+	These scripts are used to send and receive messages to/from Pure Data, but aren't included with the raspberry pi distribution of pd.
+	The source files are also included in rpi_setup should you need to recompile the pdsend, pdreceive executables

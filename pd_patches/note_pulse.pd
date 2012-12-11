@@ -1,0 +1,24 @@
+#N canvas 154 118 450 300 10;
+#X msg 192 148 0;
+#X msg 161 170 1;
+#X obj 152 225 pack f f;
+#X floatatom 152 55 5 0 0 0 - - -;
+#X obj 188 189 t b f;
+#X obj 155 258 outlet;
+#X obj 101 29 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+-1;
+#X obj 240 39 inlet duration;
+#X obj 196 108 pipe 5000;
+#X obj 152 21 inlet bang;
+#X connect 0 0 4 0;
+#X connect 1 0 2 1;
+#X connect 2 0 5 0;
+#X connect 3 0 1 0;
+#X connect 3 0 2 0;
+#X connect 3 0 8 0;
+#X connect 4 0 2 0;
+#X connect 4 1 2 1;
+#X connect 6 0 3 0;
+#X connect 7 0 8 1;
+#X connect 8 0 0 0;
+#X connect 9 0 3 0;
