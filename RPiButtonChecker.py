@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 from time import *
 import threading
 
-class KeyChecker:
+class RPiButtonChecker:
     def __init__( self, buttonPins):
         self.buttonPins = buttonPins
         GPIO.setmode(GPIO.BCM)

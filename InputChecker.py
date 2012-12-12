@@ -5,14 +5,14 @@ from time import sleep
 import os
 import threading
 from KeyChecker import *
-#import RPIButtonChecker
+from RPiButtonChecker import *
 
 class InputChecker(threading.Thread):
     def __init__(self, buttonPins = []):
         threading.Thread.__init__(self)
 
-        self.buttonChecker = None#KeyChecker(buttonPins)
-        #RPIButtonChecker(buttonPins)
+        #self.buttonChecker = KeyChecker(buttonPins)
+        self.buttonChecker = RPiButtonChecker(buttonPins)
 
         self.buttonPins = buttonPins
         self.buttonStates = [True] * len(buttonPins)

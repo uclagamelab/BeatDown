@@ -15,7 +15,9 @@ class SynthController:
     
     QNOTE_DELAY = .4
     
-    SLAP_KEYS = [['j', 'k'], ['a', 's']]
+    #SLAP_KEYS = [['j', 'k'], ['a', 's']]
+    
+    SLAP_KEYS = [[23, 24], [25, 4]]
     HIP_KEYS = ['z', 'm']
     QUIT_KEY = 'Escape'
     
@@ -38,7 +40,7 @@ class SynthController:
         self.lastSlappedButton = 0
     
         
-        self.inputChecker = InputChecker(['j', 'k' ,'a', 's', 'z', 'm', 'Escape'])
+        self.inputChecker = InputChecker([23, 24, 25, 4])#(['j', 'k' ,'a', 's', 'z', 'm', 'Escape'])
 
         self.inputChecker.addPressCallback(self.inputPressCallback)
         self.inputChecker.addReleaseCallback(self.inputReleaseCallback)
@@ -217,7 +219,7 @@ class SynthController:
 if __name__ == "__main__":
     print "Go"
     synthCon = SynthController()
-    #synthCon.inputChecker.start()
+    synthCon.inputChecker.start()
     synthCon.update()
     synthCon.debugWindow.start()
     
