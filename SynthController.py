@@ -3,18 +3,20 @@ from NotePattern import *
 from Tkinter import *
 import random
 import math
+from InputChecker import *
 
 class NoteModifiers:
     MISSLAP = 0
     GOODSLAP = 1
     NONE = 2
 
-class SynthController( Frame ):
+class SynthController:
     
     QNOTE_DELAY = .4
     
     SLAP_KEYS = [['j', 'k'], ['a', 's']]
     HIP_KEYS = ['z', 'm']
+    QUIT_KEY = 'Escape'
     
     def __init__(self):
         
@@ -28,117 +30,26 @@ class SynthController( Frame ):
         
         self.previousNotes = []
     
-    ## TKINTER BUSINESS
-        Frame.__init__( self )
-        self.pack( expand = YES, fill = BOTH )
-        self.master.title( "BeetDaun Dbg." )
-        self.master.geometry( "640x480" )
-        
-        self.canvas = Canvas(self, width=640, height=480)
-        self.canvas.pack()
-        
-        #self.message1 = StringVar()
-        #self.line1 = Label( self, textvariable = self.message1 )
-        #self.message1.set( "Type any key or shift" )
-        #self.line1.pack()
-        
-        #self.message2 = StringVar()
-        #self.line2 = Label( self, textvariable = self.message2 )
-        #self.message2.set( "" )
-        #self.line2.pack()
-        
-        self.master.bind( "<Key>", self.keyPressed )
-        self.master.bind( "<KeyRelease>", self.keyReleased )
-        
-        self.keysPressed = set()
-        self.lightGfx = [[None, None], [None, None]]
-        
-        self.hipButtonGfx = [None, None]
-    
-        boxw = 50
-        boxh = 50
-        gapx = 25
-        gapy = 200
-        
-        sx = 100
-        sy = 100
-
-        #slap buttons
-        dx = 0
-        dy = 0
-
-        self.lightGfx[0][0] = self.canvas.create_rectangle( \
-                                                           sx + dx, \
-                                                           sy + dy, \
-                                                           sy + boxw + dx, \
-                                                           sy + boxh + dy,  \
-                                                           fill="")
-    
-        dx = boxw + gapx
-        dy = 0
-        self.lightGfx[0][1] = self.canvas.create_rectangle( \
-                                                               sx + dx, \
-                                                               sy + dy, \
-                                                               sy + boxw + dx, \
-                                                               sy + boxh + dy,  \
-                                                           fill="")
-        
-        #hip hold button
-        dx = 2*boxw + 2*gapx
-        dy = 0
-        self.hipButtonGfx[0] = self.canvas.create_oval( \
-                                                           sx + dx, \
-                                                           sy + dy, \
-                                                           sy + boxw + dx, \
-                                                           sy + boxh + dy,  \
-                                                           fill="")
-    
-        dx = 0
-        dy = boxh + gapy
-        self.lightGfx[1][0] = self.canvas.create_rectangle( \
-                                                           sx + dx, \
-                                                           sy + dy, \
-                                                           sy + boxw + dx, \
-                                                           sy + boxh + dy,  \
-                                                           fill="")
-        dx = boxw + gapx
-        dy = boxh + gapy
-        self.lightGfx[1][1] = self.canvas.create_rectangle( \
-                                                           sx + dx, \
-                                                           sy + dy, \
-                                                           sy + boxw + dx, \
-                                                           sy + boxh + dy,  \
-                                                           fill="")
-        
-        #hip hold button
-        dx = 2*boxw + 2*gapx
-        dy = boxh + gapy
-        self.hipButtonGfx[1] = self.canvas.create_oval( \
-                                                     sx + dx, \
-                                                     sy + dy, \
-                                                     sy + boxw + dx, \
-                                                     sy + boxh + dy,  \
-                                                     fill="")
-    
-        #self.lightGfx[0][1] = self.canvas.create_rectangle(sx + boxw + gap, sy, sx + 2*boxw + gap, sy + boxh,  fill="")
-    
-        #self.lightGfx[1][0] = self.canvas.create_rectangle(sx, sy, sx + boxw, sy + boxh,  fill="")
-        #self.lightGfx[1][1] = self.canvas.create_rectangle(sx + boxw + gap, sy, sx + 2*boxw + gap, sy + boxh,  fill="")
-        #self.lightGfx[0][1] = self.canvas.create_rectangle(sx, sy, 150, 150, fill="")
-    
-    #self.waitingForSlap = False
-    
-    #self.currentNote = self.pattern.getCurrentNote()
-
-        self.pack()
         self.slapCallback = None
         self.hipButtonCallback = None
     
         self.lastSlappedPlayer = 0
         self.lastSlappedButton = 0
     
+        
+        self.inputChecker = InputChecker(['j', 'k' ,'a', 's', 'z', 'm', 'Escape'])
+
+        self.inputChecker.addPressCallback(self.inputPressCallback)
+        self.inputChecker.addReleaseCallback(self.inputReleaseCallback)
+
+        self.debugWindow = self.inputChecker.buttonChecker
+    
     '''
     enumerate the slap situations
+    '''
+    
+    '''
+    turn on 1 light, player slaps the light
     '''
     def triggerSinglePlayerSlap(self, targetPlayer, targetButton):
 
@@ -176,19 +87,9 @@ class SynthController( Frame ):
         
         self.slapCallback = tempSlapCallBack
     
-    #def singlePlayerSlapCallback(self):
-    #pass
-    
     def triggerPlayerRace(self, idx1, idx2):
         pass
     
-    #def playerRaceSlapCallback(self):
-    #pass
-    
-    def slapUpdate(self):
-        pass
-    def misslapUpdate(self):
-        pass
     
     def update(self, noteModifier=NoteModifiers.NONE):
         #not especially thread safe
@@ -250,13 +151,7 @@ class SynthController( Frame ):
             self.lastSlappedButton = buttonIdx
                 
     def setLightOn(self, player, side, on):
-        if (on):
-            #self.lightGfx[player][side] = self.canvas.create_rectangle(50, 50, 150, 150, fill="red")
-            self.canvas.itemconfig(self.lightGfx[player][side], fill="red")
-        else:
-            self.canvas.itemconfig(self.lightGfx[player][side], fill="")
-            #if (self.lightGfx[player][side]):
-            #    self.canvas.delete(self.lightGfx[player][side])
+        self.debugWindow.setLightOn(player, side, on)
 
     def noteOn(self, midiNum):
         os.system("echo '0 " + str(midiNum) + " 120;' | pdsend 3001")
@@ -265,54 +160,42 @@ class SynthController( Frame ):
         os.system("echo '0 " + str(midiNum) + " 0;' | pdsend 3001")
 
     def hipButtonPress(self, player = None, buttonIdx = None):
-
-        fillColor = "n/a"
-        if (player == 0):
-            fillColor = "black"
-        else:
-            fillColor = "gray"
-                
-        self.canvas.itemconfig(self.hipButtonGfx[player], fill=fillColor)
+        self.debugWindow.hipButtonPress(player, buttonIdx, True)
 
     def hipButtonRelease(self, player = None, buttonIdx = None):
-        self.canvas.itemconfig(self.hipButtonGfx[player], fill="")
+        self.debugWindow.hipButtonPress(player, buttonIdx, False)
+    
+    def inputPressCallback(self, buttonPin):
+        if buttonPin == self.QUIT_KEY:
+            self.quit()
+        
+        for i in range(2):
+            if buttonPin == SynthController.HIP_KEYS[i]:
+                self.hipButtonPress(i)
+            
+            for j in range(2):
+                if buttonPin == SynthController.SLAP_KEYS[i][j]:
+                    self.slapPress(i, j)
 
-    def triggerMisslapPenalty(self, player):
-        pass
-    
-    def triggerPrematureSlapPenalty(self, playerIdx):
-        pass
-    
-    def triggerLeaveHipPenalty(self, playerIdx):
-        pass
-    
+    def inputReleaseCallback(self, buttonPin):
+        for i in range(2):
+            if buttonPin == SynthController.HIP_KEYS[i]:
+                self.hipButtonRelease(i)
+            
+            for j in range(2):
+                if buttonPin == SynthController.SLAP_KEYS[i][j]:
+                    self.slapRelease(i, j)
+
     def slapPress(self, playerIdx, buttonIdx): #player = person getting slapped, button = button they slapped
         
         #outline box, for pc development
-        self.canvas.itemconfig(self.lightGfx[playerIdx][buttonIdx], width = 5)
+        self.debugWindow.slapPress(playerIdx, buttonIdx, True)
 
         if self.slapCallback != None:
             self.slapCallback(playerIdx, buttonIdx)
-        '''
-        if self.ticksUntilSlapCtr == self.ticksUntilSlap:
-            #print "slap!"
-
-            self.setLightOn(playerIdx, buttonIdx, False)
-
-            self.triggerMisslapPenalty(self.getOpponentIdx(playerIdx))
-            for j in range(2):
-                self.setLightOn(playerIdx, j, False)
-            
-            self.ticksUntilSlap = random.randint(12, 50)
-            self.ticksUntilSlapCtr = 0
-            self.qtrNoteDuration = self.QNOTE_DELAY
-            self.update()
-        else:
-            self.triggerPrematureSlapPenalty(self.getOpponentIdx(playerIdx))
-        '''
 
     def slapRelease(self, playerIdx, buttonIdx):
-        self.canvas.itemconfig(self.lightGfx[playerIdx][buttonIdx], width = 1)
+        self.debugWindow.slapPress(playerIdx, buttonIdx, False)
     
     def getOpponentIdx(self, playerIdx):
         if playerIdx == 0:
@@ -326,55 +209,14 @@ class SynthController( Frame ):
     def quit(self):
         self.stopAllNotes()
         self.quitNow = True
+        self.debugWindow.quit()
         sys.exit(0)
-
-    def keyPressed( self, event ):
-        #event.char )
-        
-        #self.message1.set( "Key pressed: " + self.keysPressed[0])
-        
-        if not (event.char in self.keysPressed):
-            #print "click " + event.char
-            
-            slapPlayerIndex=None
-            slapButtonIndex=None
-            hipButtonIndex = None
-            
-            for i in range(2):
-                
-                if event.char == SynthController.HIP_KEYS[i]:
-                    self.hipButtonPress(i)
-                
-                for j in range(2):
-                    if event.char == SynthController.SLAP_KEYS[i][j]:
-                        self.slapPress(i, j)
-
-            self.keysPressed.add(event.char)
-    
-        #self.message1.set( "Key pressed: " + event.char )
-
-        if event.keysym == 'Escape':
-            self.quit()
-            self.quit()
-
-        return "break"
-
-    def keyReleased( self, event ):
-        #self.synthCon.deslap()
-        #print( "Key released: " + event.char )
-        if (event.char in self.keysPressed):
-            self.keysPressed.remove(event.char)
-            for i in range(2):
-                if event.char == SynthController.HIP_KEYS[i]:
-                    self.hipButtonRelease(i)
-                for j in range(2):
-                    if event.char == SynthController.SLAP_KEYS[i][j]:
-                        self.slapRelease(i, j)
 
 
 if __name__ == "__main__":
     print "Go"
     synthCon = SynthController()
+    synthCon.inputChecker.start()
     synthCon.update()
-    synthCon.mainloop()
+    synthCon.inputChecker.buttonChecker.start()
     
