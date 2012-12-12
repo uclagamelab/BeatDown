@@ -17,6 +17,7 @@ class SynthController:
     
     #SLAP_KEYS = [['j', 'k'], ['a', 's']]
     
+    LIGHT_PINS = [[18, 10], [22, 17]]
     SLAP_KEYS = [[23, 24], [25, 4]]
     HIP_KEYS = ['z', 'm']
     QUIT_KEY = 'Escape'
@@ -40,7 +41,7 @@ class SynthController:
         self.lastSlappedButton = 0
     
         
-        self.inputChecker = InputChecker([23, 24, 25, 4])#(['j', 'k' ,'a', 's', 'z', 'm', 'Escape'])
+        self.inputChecker = InputChecker([23, 24, 25, 4], [18, 22, 10, 17])#(['j', 'k' ,'a', 's', 'z', 'm', 'Escape'])
 
         self.inputChecker.addPressCallback(self.inputPressCallback)
         self.inputChecker.addReleaseCallback(self.inputReleaseCallback)
@@ -155,6 +156,7 @@ class SynthController:
                 
     def setLightOn(self, player, side, on):
         self.debugWindow.setLightOn(player, side, on)
+        self.inputChecker.setLightOn(self.LIGHT_PINS[player][side], on)
 
     def noteOn(self, midiNum):
         os.system("echo '0 " + str(midiNum) + " 120;' | pdsend 3001")

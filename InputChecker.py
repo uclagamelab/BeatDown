@@ -1,5 +1,6 @@
 '''
     Generic button checking script can check either arduino pins or keyboard
+    Also handles light on/off messages from SynthController
     '''
 from time import sleep
 import os
@@ -8,17 +9,20 @@ from KeyChecker import *
 from RPiButtonChecker import *
 
 class InputChecker(threading.Thread):
-    def __init__(self, buttonPins = []):
+    def __init__(self, buttonPins, lightPins):
         threading.Thread.__init__(self)
 
         #self.buttonChecker = KeyChecker(buttonPins)
-        self.buttonChecker = RPiButtonChecker(buttonPins)
+        self.buttonChecker = RPiButtonChecker(buttonPins, lightPins)
 
         self.buttonPins = buttonPins
         self.buttonStates = [True] * len(buttonPins)
         self.releaseCallbacks = []
         self.pressCallbacks = []
-    
+
+    def setLightOn(self, pin, on):
+        self.buttonChecker.setLightOn(pin, on)
+
     def checkButtons(self):
         for i in range(len(self.buttonStates)):
             buttonState = self.buttonChecker.buttonPressed(i)#GPIO.input(self.buttonPins[i])
