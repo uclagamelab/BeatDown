@@ -11,8 +11,9 @@ class NoteModifiers:
     GOODSLAP = 1
     NONE = 2
 
+DEBUG_VISUALS = False
+
 class SynthController:
-    
     QNOTE_DELAY = .4
     
     #SLAP_KEYS = [['j', 'k'], ['a', 's']]
@@ -46,7 +47,8 @@ class SynthController:
         self.inputChecker.addPressCallback(self.inputPressCallback)
         self.inputChecker.addReleaseCallback(self.inputReleaseCallback)
 
-        self.debugWindow = KeyChecker([])#self.inputChecker.buttonChecker
+	if DEBUG_VISUALS:
+        	self.debugWindow = KeyChecker([])#self.inputChecker.buttonChecker
     
     '''
     enumerate the slap situations
@@ -155,7 +157,7 @@ class SynthController:
             self.lastSlappedButton = buttonIdx
                 
     def setLightOn(self, player, side, on):
-        self.debugWindow.setLightOn(player, side, on)
+        #self.debugWindow.setLightOn(player, side, on)
         self.inputChecker.setLightOn(self.LIGHT_PINS[player][side], on)
 
     def noteOn(self, midiNum):
@@ -165,10 +167,12 @@ class SynthController:
         os.system("echo '0 " + str(midiNum) + " 0;' | pdsend 3001")
 
     def hipButtonPress(self, player = None, buttonIdx = None):
-        self.debugWindow.hipButtonPress(player, buttonIdx, True)
+        if DEBUG_VISUALS:
+		self.debugWindow.hipButtonPress(player, buttonIdx, True)
 
     def hipButtonRelease(self, player = None, buttonIdx = None):
-        self.debugWindow.hipButtonPress(player, buttonIdx, False)
+        if DEBUG_VISUALS:
+		self.debugWindow.hipButtonPress(player, buttonIdx, False)
     
     def inputPressCallback(self, buttonPin):
         if buttonPin == self.QUIT_KEY:
@@ -194,13 +198,15 @@ class SynthController:
     def slapPress(self, playerIdx, buttonIdx): #player = person getting slapped, button = button they slapped
         
         #outline box, for pc development
-        self.debugWindow.slapPress(playerIdx, buttonIdx, True)
+        if DEBUG_VISUALS:
+		self.debugWindow.slapPress(playerIdx, buttonIdx, True)
 
         if self.slapCallback != None:
             self.slapCallback(playerIdx, buttonIdx)
 
     def slapRelease(self, playerIdx, buttonIdx):
-        self.debugWindow.slapPress(playerIdx, buttonIdx, False)
+        if DEBUG_VISUALS:
+		self.debugWindow.slapPress(playerIdx, buttonIdx, False)
     
     def getOpponentIdx(self, playerIdx):
         if playerIdx == 0:
@@ -214,14 +220,30 @@ class SynthController:
     def quit(self):
         self.stopAllNotes()
         self.quitNow = True
-        self.debugWindow.quit()
+        self.inputChecker.cleanup()
+        if DEBUG_VISUALS:
+		self.debugWindow.quit()
         sys.exit(0)
 
 
 if __name__ == "__main__":
-    print "Go"
     synthCon = SynthController()
-    synthCon.inputChecker.start()
-    synthCon.update()
-    synthCon.debugWindow.start()
+    try:
+        print "Go"
+        synthCon.inputChecker.daemon = True
+        synthCon.inputChecker.start()
+        synthCon.update()
+        if DEBUG_VISUALS:
+            synthCon.debugWindow.start()
+        
+        synthCon.inputChecker.join()
+        
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print "clean clean"
+        synthCon.quit()
+        exit(0)
     

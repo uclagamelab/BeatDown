@@ -18,7 +18,11 @@ class RPiButtonChecker:
 
         for pin in lightPins:
             GPIO.setup(pin, GPIO.OUT)
+            GPIO.output(pin, False)
     
+
+    def cleanup(self):
+        GPIO.cleanup()
     
     def buttonPressed(self, idx):
         return GPIO.input(self.buttonPins[idx])

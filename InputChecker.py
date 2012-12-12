@@ -20,6 +20,9 @@ class InputChecker(threading.Thread):
         self.releaseCallbacks = []
         self.pressCallbacks = []
 
+    def cleanup(self):
+        self.buttonChecker.cleanup()
+
     def setLightOn(self, pin, on):
         self.buttonChecker.setLightOn(pin, on)
 
