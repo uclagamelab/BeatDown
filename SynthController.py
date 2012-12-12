@@ -4,6 +4,7 @@ from Tkinter import *
 import random
 import math
 from InputChecker import *
+from KeyChecker import *
 
 class NoteModifiers:
     MISSLAP = 0
@@ -42,7 +43,7 @@ class SynthController:
         self.inputChecker.addPressCallback(self.inputPressCallback)
         self.inputChecker.addReleaseCallback(self.inputReleaseCallback)
 
-        self.debugWindow = self.inputChecker.buttonChecker
+        self.debugWindow = KeyChecker([])#self.inputChecker.buttonChecker
     
     '''
     enumerate the slap situations
@@ -216,7 +217,7 @@ class SynthController:
 if __name__ == "__main__":
     print "Go"
     synthCon = SynthController()
-    synthCon.inputChecker.start()
+    #synthCon.inputChecker.start()
     synthCon.update()
-    synthCon.inputChecker.buttonChecker.start()
+    synthCon.debugWindow.start()
     

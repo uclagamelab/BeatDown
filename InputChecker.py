@@ -11,7 +11,7 @@ class InputChecker(threading.Thread):
     def __init__(self, buttonPins = []):
         threading.Thread.__init__(self)
 
-        self.buttonChecker = KeyChecker(buttonPins)
+        self.buttonChecker = None#KeyChecker(buttonPins)
         #RPIButtonChecker(buttonPins)
 
         self.buttonPins = buttonPins
