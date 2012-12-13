@@ -11,26 +11,39 @@ class NoteModifiers:
     GOODSLAP = 1
     NONE = 2
 
-DEBUG_VISUALS = False
+class SynthEvent:
+    def __init__(self, function, delay):
+        self.delay = delay
+        self.function = function
 
-class SynthController:
+    def update(self):
+        self.delay = self.delay - 1
+
+    def isReady():
+        return self.delay <= 0
+
+    def execute(self):
+        self.function()
+
+
+class SynthController(threading.Thread):
     QNOTE_DELAY = .4
+    TICK_DELAY = .01
     
-    #SLAP_KEYS = [['j', 'k'], ['a', 's']]
-    
+    # this system is really dumb
+    # probably want to register what the callback should return?
+    # have slightly different callback for each pin?
     LIGHT_PINS = [[18, 10], [22, 17]]
-    SLAP_KEYS = [[23, 24], [25, 4]]
+    SLAP_KEYS = [['j', 'k'] ,['a', 's']]#[[23, 24], [25, 4]]
     HIP_KEYS = ['z', 'm']
     QUIT_KEY = 'Escape'
     
     def __init__(self):
-        
+        threading.Thread.__init__(self) # should be able to ditch eventually
         self.stopAllNotes()
         
         self.qtrNoteDuration = self.QNOTE_DELAY
         self.pattern = NotePattern()
-        self.ticksUntilSlap = 1
-        self.ticksUntilSlapCtr = 0
         self.quitNow = False
         
         self.previousNotes = []
@@ -40,15 +53,21 @@ class SynthController:
     
         self.lastSlappedPlayer = 0
         self.lastSlappedButton = 0
+        
+        self.ticksUntilSlap = 1
+        self.ticksUntilSlapCtr = 0
     
         
-        self.inputChecker = InputChecker([23, 24, 25, 4], [18, 22, 10, 17])#(['j', 'k' ,'a', 's', 'z', 'm', 'Escape'])
+        #self.inputChecker = InputChecker([23, 24, 25, 4], [18, 22, 10, 17])#(['j', 'k' ,'a', 's', 'z', 'm', 'Escape'])
 
+        self.inputChecker = KeyChecker(self.SLAP_KEYS, self.HIP_KEYS, self.LIGHT_PINS)
+
+        
         self.inputChecker.addPressCallback(self.inputPressCallback)
         self.inputChecker.addReleaseCallback(self.inputReleaseCallback)
-
-	if DEBUG_VISUALS:
-        	self.debugWindow = KeyChecker([])#self.inputChecker.buttonChecker
+    
+        self.events = []
+        self.events.append(SynthEvent(self.setupNextNote(), 0))
     
     '''
     enumerate the slap situations
@@ -87,7 +106,7 @@ class SynthController:
                 self.ticksUntilSlap = random.randint(1, 2)
                 self.ticksUntilSlapCtr = 0
                 self.qtrNoteDuration = self.QNOTE_DELAY
-                self.update(noteModifier)
+                self.setupNextNote(noteModifier)
             else:
                 pass #wrong player slaps! ignore for now
         
@@ -97,11 +116,22 @@ class SynthController:
         pass
     
     
-    def update(self, noteModifier=NoteModifiers.NONE):
-        #not especially thread safe
-        if self.quitNow:
-            return
+    def update(self):
+        toDelete = []
+        print("ud-paste")
+        for event in self.events:
+            if event.isReady():
+                print("execute")
+                event.execute()
+                toDelete.append(event)
+            else:
+                event.update()
+    
+        for event in toDelete:
+            self.events.remove(event)
+    
                 
+    def setupNextNote(self, noteModifier=NoteModifiers.NONE):
         constTempoCutoff =  int(math.ceil(self.ticksUntilSlap * .8))
 
         if self.ticksUntilSlapCtr >= constTempoCutoff:
@@ -136,7 +166,9 @@ class SynthController:
             self.previousNotes.append(currentNote)
 
         if (self.ticksUntilSlapCtr < self.ticksUntilSlap - 1): #pattern not over
-            threading.Timer(self.qtrNoteDuration, self.update).start()
+            delay = int(self.self.qtrNoteDuration / self.TICK_DELAY)
+            self.events.append(SynthEvent(self.setupNextNote, delay))
+            #threading.Timer(self.qtrNoteDuration, self.update).start()
 
         else:#last note of run
 
@@ -149,7 +181,9 @@ class SynthController:
 
             if nextSlappedPlayer == self.lastSlappedPlayer and buttonIdx == self.lastSlappedButton:
                 def f(): self.triggerSinglePlayerSlap(nextSlappedPlayer, buttonIdx)
-                threading.Timer(self.qtrNoteDuration * .75, f).start()
+                delay = int(self.qtrNoteDuration * .75 / self.TICK_DELAY)
+                self.events.append(SynthEvent(f, delay))
+                #threading.Timer(self.qtrNoteDuration * .75, f).start()
             else:
                 self.triggerSinglePlayerSlap(nextSlappedPlayer, buttonIdx)
 
@@ -167,12 +201,10 @@ class SynthController:
         os.system("echo '0 " + str(midiNum) + " 0;' | pdsend 3001")
 
     def hipButtonPress(self, player = None, buttonIdx = None):
-        if DEBUG_VISUALS:
-		self.debugWindow.hipButtonPress(player, buttonIdx, True)
+        pass
 
     def hipButtonRelease(self, player = None, buttonIdx = None):
-        if DEBUG_VISUALS:
-		self.debugWindow.hipButtonPress(player, buttonIdx, False)
+        pass
     
     def inputPressCallback(self, buttonPin):
         if buttonPin == self.QUIT_KEY:
@@ -196,17 +228,12 @@ class SynthController:
                     self.slapRelease(i, j)
 
     def slapPress(self, playerIdx, buttonIdx): #player = person getting slapped, button = button they slapped
-        
-        #outline box, for pc development
-        if DEBUG_VISUALS:
-		self.debugWindow.slapPress(playerIdx, buttonIdx, True)
-
+    
         if self.slapCallback != None:
             self.slapCallback(playerIdx, buttonIdx)
 
     def slapRelease(self, playerIdx, buttonIdx):
-        if DEBUG_VISUALS:
-		self.debugWindow.slapPress(playerIdx, buttonIdx, False)
+        pass
     
     def getOpponentIdx(self, playerIdx):
         if playerIdx == 0:
@@ -218,32 +245,27 @@ class SynthController:
         os.system("echo '1 0;' | pdsend 3001") # stop all notes
 
     def quit(self):
+        print "synth con quit"
         self.stopAllNotes()
         self.quitNow = True
-        self.inputChecker.cleanup()
-        if DEBUG_VISUALS:
-		self.debugWindow.quit()
         sys.exit(0)
 
+    def run(self):
+        while True:
+            self.inputChecker.checkButtons()
+            
+            #called modified update
+            sleep(SynthController.TICK_DELAY)
+            
 
 if __name__ == "__main__":
     synthCon = SynthController()
     try:
+        print "to update"
+        synthCon.start()
         print "Go"
-        synthCon.inputChecker.daemon = True
         synthCon.inputChecker.start()
-        synthCon.update()
-        if DEBUG_VISUALS:
-            synthCon.debugWindow.start()
-        
-        synthCon.inputChecker.join()
-        
-        while True:
-            time.sleep(1)
+
     except KeyboardInterrupt:
         pass
-    finally:
-        print "clean clean"
-        synthCon.quit()
-        exit(0)
-    
+
