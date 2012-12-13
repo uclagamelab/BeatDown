@@ -5,6 +5,7 @@ import random
 import math
 from InputChecker import *
 from KeyChecker import *
+from RPiButtonChecker import *
 
 class NoteModifiers:
     MISSLAP = 0
@@ -26,7 +27,7 @@ class SynthEvent:
         self.function()
 
 
-class SynthController(threading.Thread):
+class SynthController:#(threading.Thread):
     QNOTE_DELAY = .4
     TICK_DELAY = .01
     
@@ -34,12 +35,13 @@ class SynthController(threading.Thread):
     # probably want to register what the callback should return?
     # have slightly different callback for each pin?
     LIGHT_PINS = [[18, 10], [22, 17]]
-    SLAP_KEYS = [['j', 'k'] ,['a', 's']]#[[23, 24], [25, 4]]
-    HIP_KEYS = ['z', 'm']
+    #SLAP_KEYS = [['j', 'k'] ,['a', 's']]
+    SLAP_KEYS = [[23, 24], [25, 4]]
+    HIP_KEYS = []#['z', 'm']
     QUIT_KEY = 'Escape'
     
     def __init__(self):
-        threading.Thread.__init__(self) # should be able to ditch eventually
+        #threading.Thread.__init__(self) # should be able to ditch eventually
         self.stopAllNotes()
         
         self.qtrNoteDuration = self.QNOTE_DELAY
@@ -57,10 +59,9 @@ class SynthController(threading.Thread):
         self.ticksUntilSlap = 1
         self.ticksUntilSlapCtr = 0
     
-        
         #self.inputChecker = InputChecker([23, 24, 25, 4], [18, 22, 10, 17])#(['j', 'k' ,'a', 's', 'z', 'm', 'Escape'])
 
-        self.inputChecker = KeyChecker(self.SLAP_KEYS, self.HIP_KEYS, self.LIGHT_PINS)
+        self.inputChecker = RPiButtonChecker(self.SLAP_KEYS, self.LIGHT_PINS)#KeyChecker(self.SLAP_KEYS, self.HIP_KEYS, self.LIGHT_PINS)
 
         
         self.inputChecker.addPressCallback(self.inputPressCallback)
@@ -78,6 +79,7 @@ class SynthController(threading.Thread):
     '''
     def triggerSinglePlayerSlap(self, targetPlayer, targetButton):
 
+        print "trigger slap"
         #must store, because they will get clobbered after, and can't be relied upon in the callback
         
         self.setLightOn(targetPlayer, targetButton, True)
@@ -94,8 +96,9 @@ class SynthController(threading.Thread):
                 else:
                     noteModifier = NoteModifiers.MISSLAP
                     #print "mis-slap"
-                    pass
+                    #pass
                 
+                print "temp slap callback"
                 # turn all the lights off
                 for i in range(2):
                     for j in range(2):
@@ -190,6 +193,7 @@ class SynthController(threading.Thread):
                 
     def setLightOn(self, player, side, on):
         #self.debugWindow.setLightOn(player, side, on)
+        print "syn " + str(self.LIGHT_PINS[player][side]) + " " + str(on)
         self.inputChecker.setLightOn(self.LIGHT_PINS[player][side], on)
 
     def noteOn(self, midiNum):
@@ -207,19 +211,24 @@ class SynthController(threading.Thread):
         pass
     
     def inputPressCallback(self, buttonPin):
+        
+        print("callback " + str(buttonPin))
+
         if buttonPin == self.QUIT_KEY:
             self.quit()
         
-        for i in range(2):
-            if buttonPin == SynthController.HIP_KEYS[i]:
-                self.hipButtonPress(i)
+        for pins in SynthController.HIP_KEYS:
+            for pin in pins:
+                if pin == buttonPin:
+                    self.hipButtonPress(pin)
             
-            for j in range(2):
+        for i in range(len(self.SLAP_KEYS)):
+            for j in range(len(self.SLAP_KEYS[i])):
                 if buttonPin == SynthController.SLAP_KEYS[i][j]:
                     self.slapPress(i, j)
 
     def inputReleaseCallback(self, buttonPin):
-        for i in range(2):
+        for i in range(len(SynthController.HIP_KEYS)):
             if buttonPin == SynthController.HIP_KEYS[i]:
                 self.hipButtonRelease(i)
             
@@ -251,7 +260,7 @@ class SynthController(threading.Thread):
         self.quitNow = True
         sys.exit(0)
 
-    def run(self):
+    def start(self):#run(self):
         while True:
             self.inputChecker.checkButtons()
             self.update()
@@ -265,7 +274,7 @@ if __name__ == "__main__":
         print "to update"
         synthCon.start()
         print "Go"
-        synthCon.inputChecker.start()
+        #synthCon.inputChecker.start() #necessary for visual testing
 
     except KeyboardInterrupt:
         pass
