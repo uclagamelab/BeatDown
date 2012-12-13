@@ -4,8 +4,13 @@ from Tkinter import *
 import random
 import math
 from InputChecker import *
-from KeyChecker import *
-from RPiButtonChecker import *
+
+USE_KEYBOARD = True
+
+if USE_KEYBOARD:
+    from KeyChecker import *
+else:
+    from RPiButtonChecker import *
 
 class NoteModifiers:
     MISSLAP = 0
@@ -35,9 +40,14 @@ class SynthController:#(threading.Thread):
     # probably want to register what the callback should return?
     # have slightly different callback for each pin?
     LIGHT_PINS = [[18, 10], [22, 17]]
-    #SLAP_KEYS = [['j', 'k'] ,['a', 's']]
+    
+    
     SLAP_KEYS = [[23, 24], [25, 4]]
-    HIP_KEYS = []#['z', 'm']
+    HIP_KEYS = []
+    if USE_KEYBOARD:
+        SLAP_KEYS = [['j', 'k'] ,['a', 's']]
+        HIP_KEYS = ['z', 'm']
+    
     QUIT_KEY = 'Escape'
     
     def __init__(self):
@@ -61,7 +71,11 @@ class SynthController:#(threading.Thread):
     
         #self.inputChecker = InputChecker([23, 24, 25, 4], [18, 22, 10, 17])#(['j', 'k' ,'a', 's', 'z', 'm', 'Escape'])
 
-        self.inputChecker = RPiButtonChecker(self.SLAP_KEYS, self.LIGHT_PINS)#KeyChecker(self.SLAP_KEYS, self.HIP_KEYS, self.LIGHT_PINS)
+        self.inputChecker = None
+        if USE_KEYBOARD:
+            self.inputChecker = KeyChecker(self.SLAP_KEYS, self.HIP_KEYS, self.LIGHT_PINS)
+        else:
+            self.inputChecker = RPiButtonChecker(self.SLAP_KEYS, self.LIGHT_PINS)
 
         
         self.inputChecker.addPressCallback(self.inputPressCallback)
@@ -260,12 +274,20 @@ class SynthController:#(threading.Thread):
         self.quitNow = True
         sys.exit(0)
 
-    def start(self):#run(self):
+    def updateLoop(self):
         while True:
             self.inputChecker.checkButtons()
             self.update()
             #called modified update
             sleep(SynthController.TICK_DELAY)
+
+    def start(self):#run(self):
+        
+        if USE_KEYBOARD:
+            threading.Timer(10, self.updateLoop).start()
+            self.inputChecker.start()
+        else:
+            self.updateLoop()
             
 
 if __name__ == "__main__": 
@@ -273,8 +295,6 @@ if __name__ == "__main__":
     try:
         print "to update"
         synthCon.start()
-        print "Go"
-        #synthCon.inputChecker.start() #necessary for visual testing
 
     except KeyboardInterrupt:
         pass
