@@ -19,7 +19,7 @@ class SynthEvent:
     def update(self):
         self.delay = self.delay - 1
 
-    def isReady():
+    def isReady(self):
         return self.delay <= 0
 
     def execute(self):
@@ -67,7 +67,7 @@ class SynthController(threading.Thread):
         self.inputChecker.addReleaseCallback(self.inputReleaseCallback)
     
         self.events = []
-        self.events.append(SynthEvent(self.setupNextNote(), 0))
+        self.events.append(SynthEvent(self.setupNextNote, 0))
     
     '''
     enumerate the slap situations
@@ -118,10 +118,8 @@ class SynthController(threading.Thread):
     
     def update(self):
         toDelete = []
-        print("ud-paste")
         for event in self.events:
             if event.isReady():
-                print("execute")
                 event.execute()
                 toDelete.append(event)
             else:
@@ -195,9 +193,11 @@ class SynthController(threading.Thread):
         self.inputChecker.setLightOn(self.LIGHT_PINS[player][side], on)
 
     def noteOn(self, midiNum):
+        #pass
         os.system("echo '0 " + str(midiNum) + " 120;' | pdsend 3001")
 
     def noteOff(self, midiNum):
+        #pass
         os.system("echo '0 " + str(midiNum) + " 0;' | pdsend 3001")
 
     def hipButtonPress(self, player = None, buttonIdx = None):
@@ -242,6 +242,7 @@ class SynthController(threading.Thread):
             return 0
 
     def stopAllNotes(self):
+        #pass
         os.system("echo '1 0;' | pdsend 3001") # stop all notes
 
     def quit(self):
@@ -253,12 +254,12 @@ class SynthController(threading.Thread):
     def run(self):
         while True:
             self.inputChecker.checkButtons()
-            
+            self.update()
             #called modified update
             sleep(SynthController.TICK_DELAY)
             
 
-if __name__ == "__main__":
+if __name__ == "__main__": 
     synthCon = SynthController()
     try:
         print "to update"
@@ -268,4 +269,6 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         pass
+    finally:
+        synthCon.stopAllNotes()
 
