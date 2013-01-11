@@ -11,7 +11,7 @@ class InputChecker():
         self.buttonStates = dict()
         
         for buttonPin in buttonPins:
-            self.buttonStates[buttonPin] = True # True when not pressed, for some reason
+            self.buttonStates[buttonPin] = False
         
         self.releaseCallbacks = []
         self.pressCallbacks = []
@@ -32,14 +32,14 @@ class InputChecker():
             buttonState = self.buttonPressed(buttonPin)#GPIO.input(self.buttonPins[i])
             
             if ( buttonState == False and self.buttonStates[buttonPin] == True):
-                for cb in self.pressCallbacks:
-                    cb(buttonPin)
-            #print 'press ' + str(i)
-        
-            elif ( buttonState == True and self.buttonStates[buttonPin] == False):
                 for cb in self.releaseCallbacks:
                     cb(buttonPin)
-            #print 'release ' + str(i)
+                
+        
+            elif ( buttonState == True and self.buttonStates[buttonPin] == False):
+                for cb in self.pressCallbacks:
+                    cb(buttonPin)
+                #print 'press' + str(buttonPin)
     
             self.buttonStates[buttonPin] = buttonState
 

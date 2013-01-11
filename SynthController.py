@@ -5,7 +5,7 @@ import random
 import math
 from InputChecker import *
 
-USE_KEYBOARD = True
+USE_KEYBOARD = False
 
 if USE_KEYBOARD:
     from KeyChecker import *
@@ -39,10 +39,10 @@ class SynthController:#(threading.Thread):
     # this system is really dumb
     # probably want to register what the callback should return?
     # have slightly different callback for each pin?
-    LIGHT_PINS = [[18, 10], [22, 17]]
+    LIGHT_PINS = [[18,23], [24, 25]]
     
     
-    SLAP_KEYS = [[23, 24], [25, 4]]
+    SLAP_KEYS = [[4, 17], [10, 22]]
     HIP_KEYS = []
     if USE_KEYBOARD:
         SLAP_KEYS = [['j', 'k'] ,['a', 's']]
@@ -51,7 +51,6 @@ class SynthController:#(threading.Thread):
     QUIT_KEY = 'Escape'
     
     def __init__(self):
-        #threading.Thread.__init__(self) # should be able to ditch eventually
         self.stopAllNotes()
         
         self.qtrNoteDuration = self.QNOTE_DELAY
@@ -93,7 +92,7 @@ class SynthController:#(threading.Thread):
     '''
     def triggerSinglePlayerSlap(self, targetPlayer, targetButton):
 
-        print "trigger slap"
+        #print "trigger slap"
         #must store, because they will get clobbered after, and can't be relied upon in the callback
         
         self.setLightOn(targetPlayer, targetButton, True)
@@ -112,7 +111,7 @@ class SynthController:#(threading.Thread):
                     #print "mis-slap"
                     #pass
                 
-                print "temp slap callback"
+               # print "temp slap callback"
                 # turn all the lights off
                 for i in range(2):
                     for j in range(2):
@@ -207,7 +206,7 @@ class SynthController:#(threading.Thread):
                 
     def setLightOn(self, player, side, on):
         #self.debugWindow.setLightOn(player, side, on)
-        print "syn " + str(self.LIGHT_PINS[player][side]) + " " + str(on)
+        #print "syn " + str(self.LIGHT_PINS[player][side]) + " " + str(on)
         self.inputChecker.setLightOn(self.LIGHT_PINS[player][side], on)
 
     def noteOn(self, midiNum):
@@ -226,7 +225,7 @@ class SynthController:#(threading.Thread):
     
     def inputPressCallback(self, buttonPin):
         
-        print("callback " + str(buttonPin))
+        print("press " + str(buttonPin))
 
         if buttonPin == self.QUIT_KEY:
             self.quit()
@@ -242,6 +241,7 @@ class SynthController:#(threading.Thread):
                     self.slapPress(i, j)
 
     def inputReleaseCallback(self, buttonPin):
+        print ("release " + str(buttonPin))
         for i in range(len(SynthController.HIP_KEYS)):
             if buttonPin == SynthController.HIP_KEYS[i]:
                 self.hipButtonRelease(i)
@@ -251,7 +251,6 @@ class SynthController:#(threading.Thread):
                     self.slapRelease(i, j)
 
     def slapPress(self, playerIdx, buttonIdx): #player = person getting slapped, button = button they slapped
-    
         if self.slapCallback != None:
             self.slapCallback(playerIdx, buttonIdx)
 

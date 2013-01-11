@@ -45,7 +45,7 @@ class RPiButtonChecker(InputChecker):
         return GPIO.input(pin)#(self.buttonPins[idx])
     
     def setLightOn(self, pin, on):
-        print(str(pin) + " " + str(on))
+        #print(str(pin) + " " + str(on))
         GPIO.output(pin, on)
     
     def start(self):
